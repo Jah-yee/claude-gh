@@ -1,0 +1,121 @@
+openapi: 3.0.3
+info:
+  title: StoreLite Inventory API
+  version: 1.0.0
+  description: Product catalog, prices and stock levels. Owned by inventory-service.
+servers:
+  - url: http://localhost:8082
+tags:
+  - name: products
+paths:
+  /api/products:
+    get:
+      tags: [products]
+      operationId: listProducts
+      summary: List all products with price and current stock
+      responses:
+        '200':
+          description: Products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+  /api/products/{sku}:
+    get:
+      tags: [products]
+      operationId: getProduct
+      parameters:
+        - $ref: '#/components/parameters/Sku'
+      responses:
+        '200':
+          description: Product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/Problem'
+  /api/products/{sku}/restock:
+    post:
+      tags: [products]
+      operationId: restockProduct
+      parameters:
+        - $ref: '#/components/parameters/Sku'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestockRequest'
+      responses:
+        '200':
+          description: Updated product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          $ref: '#/components/responses/Problem'
+        '404':
+          $ref: '#/components/responses/Problem'
+components:
+  parameters:
+    Sku:
+      name: sku
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    Problem:
+      description: Error (RFC 9457 problem details)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  schemas:
+    Product:
+      type: object
+      required: [sku, name, priceCents, stock, lowStockThreshold, lowStock]
+      properties:
+        sku:
+          type: string
+          example: MILK-1L
+        name:
+          type: string
+          example: Whole Milk 1L
+        priceCents:
+          type: integer
+          format: int64
+          example: 249
+        stock:
+          type: integer
+          example: 40
+        lowStockThreshold:
+          type: integer
+          example: 5
+        lowStock:
+          type: boolean
+          description: True when stock is at or below lowStockThreshold.
+    RestockRequest:
+      type: object
+      required: [quantity]
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+    Problem:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
