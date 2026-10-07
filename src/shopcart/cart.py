@@ -12,7 +12,7 @@ class Item:
 
 class Cart:
     def __init__(self, items=None):
-        self.items = items if items is not None else []
+        self.items = list(items) if items is not None else []
 
     def add(self, item: Item) -> None:
         for existing in self.items:
